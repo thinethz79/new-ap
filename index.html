@@ -1,0 +1,302 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no" />
+    <title>SUBNET MAFIA | SECURE ACCESS</title>
+    
+    <!-- 
+      SECURITY NOTICE: 
+      GitHub Pages is a static hosting service. To protect your logic 100%:
+      1. Use a Private Repository on GitHub.
+      2. Move sensitive algorithms to Firebase Cloud Functions (Backend).
+      3. Restrict your Firebase API Key to your specific domain in the Firebase Console.
+    -->
+
+    <!-- Dependencies -->
+    <script src="https://unpkg.com/react@18/umd/react.production.min.js"></script>
+    <script src="https://unpkg.com/react-dom@18/umd/react-dom.production.min.js"></script>
+    <script src="https://unpkg.com/@babel/standalone/babel.min.js"></script>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <script src="https://unpkg.com/lucide@latest"></script>
+
+    <style>
+        @keyframes pulse-glow {
+            0%, 100% { box-shadow: 0 0 20px rgba(220, 38, 38, 0.2); }
+            50% { box-shadow: 0 0 40px rgba(220, 38, 38, 0.5); }
+        }
+        @keyframes scanline {
+            0% { transform: translateY(-100%); }
+            100% { transform: translateY(100%); }
+        }
+        body {
+            background-color: #050505;
+            color: #ffffff;
+            font-family: ui-sans-serif, system-ui, sans-serif;
+            overflow-x: hidden;
+            /* Disable user selection to prevent easy copying */
+            user-select: none;
+            -webkit-tap-highlight-color: transparent;
+        }
+        .bg-grid {
+            background-image: linear-gradient(to right, #111 1px, transparent 1px),
+                              linear-gradient(to bottom, #111 1px, transparent 1px);
+            background-size: 30px 30px;
+        }
+        @media (min-width: 768px) {
+            .bg-grid { background-size: 40px 40px; }
+        }
+        .scanline {
+            position: fixed;
+            top: 0; left: 0; width: 100%; height: 100px;
+            background: linear-gradient(to bottom, transparent, rgba(220, 38, 38, 0.05), transparent);
+            animation: scanline 8s linear infinite;
+            pointer-events: none;
+            z-index: 50;
+        }
+        .glass-panel {
+            background: rgba(10, 10, 10, 0.85);
+            backdrop-filter: blur(16px);
+            -webkit-backdrop-filter: blur(16px);
+            border: 1px solid rgba(255, 255, 255, 0.08);
+        }
+        .btn-glow:hover {
+            animation: pulse-glow 2s infinite;
+        }
+        /* Custom scrollbar for the modal */
+        .modal-scroll::-webkit-scrollbar { width: 4px; }
+        .modal-scroll::-webkit-scrollbar-track { background: transparent; }
+        .modal-scroll::-webkit-scrollbar-thumb { background: #dc2626; border-radius: 10px; }
+    </style>
+
+    <script>
+        /**
+         * ANTI-INSPECTION GUARD
+         */
+        document.addEventListener('contextmenu', e => e.preventDefault());
+        document.onkeydown = function(e) {
+            if (e.keyCode == 123) return false; 
+            if (e.ctrlKey && e.shiftKey && e.keyCode == 'I'.charCodeAt(0)) return false; 
+            if (e.ctrlKey && e.shiftKey && e.keyCode == 'C'.charCodeAt(0)) return false; 
+            if (e.ctrlKey && e.shiftKey && e.keyCode == 'J'.charCodeAt(0)) return false; 
+            if (e.ctrlKey && e.keyCode == 'U'.charCodeAt(0)) return false; 
+        };
+    </script>
+</head>
+<body>
+    <div id="root"></div>
+
+    <script type="text/babel" data-type="module">
+        const { useState, useEffect, useRef } = React;
+
+        // Firebase Setup
+        import { initializeApp } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-app.js";
+        import { getAuth, signInWithEmailAndPassword } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-auth.js";
+
+        const _0x4f12 = {
+            k: "AIzaSyB5w_vWoPeojuP9qFZrfeS62vAS3Cg39go",
+            d: "aviator-predictor-subnet-mafia.firebaseapp.com",
+            p: "aviator-predictor-subnet-mafia",
+            a: "1:242699493486:web:759941ae6e0b38ad89467f"
+        };
+
+        const firebaseConfig = {
+            apiKey: _0x4f12.k,
+            authDomain: _0x4f12.d,
+            projectId: _0x4f12.p,
+            appId: _0x4f12.a
+        };
+
+        const app = initializeApp(firebaseConfig);
+        const auth = getAuth(app);
+
+        const Icon = ({ name, className = "" }) => {
+            const iconRef = useRef(null);
+            useEffect(() => {
+                if (window.lucide) {
+                    window.lucide.createIcons();
+                }
+            }, [name]);
+            return <i data-lucide={name} className={className}></i>;
+        };
+
+        const App = () => {
+            const [email, setEmail] = useState("");
+            const [password, setPassword] = useState("");
+            const [error, setError] = useState("");
+            const [isLoading, setIsLoading] = useState(false);
+            const [showModal, setShowModal] = useState(false);
+
+            const handleLogin = async (e) => {
+                e.preventDefault();
+                setError("");
+                setIsLoading(true);
+
+                try {
+                    await signInWithEmailAndPassword(auth, email, password);
+                    window.location.href = "dashboard.html";
+                } catch (err) {
+                    if (err.code === "auth/user-not-found" || err.code === "auth/invalid-email") {
+                        setError("System error: ID not found.");
+                    } else if (err.code === "auth/wrong-password" || err.code === "auth/invalid-credential") {
+                        setError("Access denied: Invalid credentials.");
+                    } else {
+                        setError("Connection error. Try again.");
+                    }
+                } finally {
+                    setIsLoading(false);
+                }
+            };
+
+            return (
+                <div className="min-h-screen relative flex items-center justify-center p-4 sm:p-6 bg-grid overflow-hidden">
+                    <div className="scanline"></div>
+                    
+                    {/* Background Orbs - Repositioned for mobile safety */}
+                    <div className="absolute top-0 left-0 w-64 h-64 sm:w-96 sm:h-96 bg-red-900/10 blur-[80px] sm:blur-[120px] rounded-full -translate-x-1/2 -translate-y-1/2"></div>
+                    <div className="absolute bottom-0 right-0 w-64 h-64 sm:w-96 sm:h-96 bg-zinc-900/20 blur-[80px] sm:blur-[120px] rounded-full translate-x-1/2 translate-y-1/2"></div>
+
+                    {/* Main Login Card */}
+                    <div className="w-full max-w-[400px] glass-panel p-6 sm:p-8 rounded-[2rem] sm:rounded-[2.5rem] shadow-2xl relative z-10 border-t border-white/10">
+                        <div className="flex justify-center mb-6 sm:mb-8">
+                            <div className="p-3 sm:p-4 bg-red-600 rounded-xl sm:rounded-2xl shadow-lg shadow-red-900/30">
+                                <Icon name="terminal" className="w-6 h-6 sm:w-8 sm:h-8 text-white" />
+                            </div>
+                        </div>
+
+                        <div className="text-center mb-8 sm:mb-10">
+                            <h1 className="text-2xl sm:text-3xl font-black italic tracking-tighter mb-2">
+                                SUBNET <span className="text-red-600">MAFIA</span>
+                            </h1>
+                            <p className="text-zinc-500 text-[9px] sm:text-[10px] uppercase font-bold tracking-[0.2em] sm:tracking-[0.3em]">Encrypted Login Protocol</p>
+                        </div>
+
+                        <form onSubmit={handleLogin} className="space-y-4">
+                            <div className="relative group">
+                                <div className="absolute left-4 top-1/2 -translate-y-1/2 text-zinc-600 group-focus-within:text-red-500 transition-colors">
+                                    <Icon name="mail" className="w-4 h-4" />
+                                </div>
+                                <input 
+                                    type="email" 
+                                    required
+                                    placeholder="Enter System ID (Email)"
+                                    className="w-full bg-black/50 border border-white/5 rounded-xl sm:rounded-2xl py-3 sm:py-4 pl-12 pr-4 text-sm outline-none focus:border-red-600 focus:ring-1 focus:ring-red-600/50 transition-all"
+                                    value={email}
+                                    onChange={(e) => setEmail(e.target.value)}
+                                />
+                            </div>
+
+                            <div className="relative group">
+                                <div className="absolute left-4 top-1/2 -translate-y-1/2 text-zinc-600 group-focus-within:text-red-500 transition-colors">
+                                    <Icon name="key-round" className="w-4 h-4" />
+                                </div>
+                                <input 
+                                    type="password" 
+                                    required
+                                    placeholder="System Access Key"
+                                    className="w-full bg-black/50 border border-white/5 rounded-xl sm:rounded-2xl py-3 sm:py-4 pl-12 pr-4 text-sm outline-none focus:border-red-600 focus:ring-1 focus:ring-red-600/50 transition-all"
+                                    value={password}
+                                    onChange={(e) => setPassword(e.target.value)}
+                                />
+                            </div>
+
+                            {error && (
+                                <div className="p-3 bg-red-900/20 border border-red-500/20 rounded-xl flex items-center gap-2">
+                                    <Icon name="alert-circle" className="w-4 h-4 text-red-500" />
+                                    <p className="text-[10px] text-red-400 font-bold uppercase leading-tight">{error}</p>
+                                </div>
+                            )}
+
+                            <button 
+                                type="submit"
+                                disabled={isLoading}
+                                className="w-full bg-red-600 hover:bg-red-500 py-3.5 sm:py-4 rounded-xl sm:rounded-2xl font-black uppercase text-[11px] sm:text-xs tracking-[0.2em] transition-all transform active:scale-[0.98] shadow-lg shadow-red-900/20 btn-glow"
+                            >
+                                {isLoading ? "Synchronizing..." : "Initialize Session"}
+                            </button>
+                        </form>
+
+                        <div className="mt-6 sm:mt-8 pt-6 sm:pt-8 border-t border-white/5 text-center">
+                            <button 
+                                onClick={() => setShowModal(true)}
+                                className="text-zinc-500 hover:text-white text-[9px] sm:text-[10px] font-black uppercase tracking-[0.2em] flex items-center justify-center gap-2 mx-auto transition-colors py-2"
+                            >
+                                <Icon name="shopping-cart" className="w-3 h-3" /> Get Access Key
+                            </button>
+                        </div>
+                    </div>
+
+                    {/* Pricing Modal */}
+                    {showModal && (
+                        <div className="fixed inset-0 z-[100] flex items-center justify-center p-4 bg-black/90 backdrop-blur-md">
+                            <div className="w-full max-w-[420px] max-h-[90vh] glass-panel rounded-[2rem] relative overflow-hidden shadow-2xl border border-red-900/30 flex flex-col animate-in fade-in zoom-in duration-200">
+                                {/* Modal Header - Fixed */}
+                                <div className="bg-red-600 p-5 sm:p-6 flex items-center justify-between shrink-0">
+                                    <div className="flex items-center gap-3">
+                                        <div className="p-2 bg-white/10 rounded-lg">
+                                            <Icon name="zap" className="w-4 h-4 text-white" />
+                                        </div>
+                                        <div className="text-left">
+                                            <h2 className="text-white font-black italic text-xs sm:text-sm tracking-tighter uppercase leading-none">AVIATOR PREDICTOR V1.0</h2>
+                                            <p className="text-white/70 text-[7px] sm:text-[8px] font-bold uppercase tracking-widest mt-1">පුරුදු වෙන්න හදන ඒවා..</p>
+                                        </div>
+                                    </div>
+                                    <button onClick={() => setShowModal(false)} className="p-2 hover:bg-black/20 rounded-xl transition-colors">
+                                        <Icon name="x" className="w-5 h-5 text-white" />
+                                    </button>
+                                </div>
+
+                                {/* Modal Body - Scrollable */}
+                                <div className="p-6 sm:p-8 space-y-6 overflow-y-auto modal-scroll">
+                                    <div className="text-center">
+                                        <p className="text-red-500 font-black text-[10px] sm:text-xs uppercase tracking-[0.2em] sm:tracking-[0.3em] mb-1">99.9999% Accurate Signals!</p>
+                                        <p className="text-zinc-400 text-[9px] sm:text-[10px] italic">Don't play luck, play logic.</p>
+                                    </div>
+
+                                    <div className="space-y-2 font-mono text-center">
+                                        <p className="text-zinc-600 text-[8px] uppercase font-bold tracking-[0.4em] mb-4">━━━━ PREMIUM PRICE LIST ━━━━</p>
+                                        <div className="flex justify-between items-center px-4 py-3 bg-white/5 rounded-xl border border-white/5">
+                                            <span className="text-[10px] sm:text-xs uppercase font-bold">1 Week</span>
+                                            <span className="text-red-500 font-black">1,500/=</span>
+                                        </div>
+                                        <div className="flex justify-between items-center px-4 py-3 bg-white/5 rounded-xl border border-white/5">
+                                            <span className="text-[10px] sm:text-xs uppercase font-bold">2 Weeks</span>
+                                            <span className="text-red-500 font-black">2,500/=</span>
+                                        </div>
+                                        <div className="flex justify-between items-center px-4 py-3 bg-white/5 rounded-xl border border-white/5">
+                                            <span className="text-[10px] sm:text-xs uppercase font-bold">1 Month</span>
+                                            <span className="text-red-500 font-black">5,000/=</span>
+                                        </div>
+                                        <div className="flex justify-between items-center px-4 py-3 bg-red-600/10 rounded-xl border border-red-600/20">
+                                            <span className="text-[10px] sm:text-xs uppercase font-bold text-red-500">Lifetime</span>
+                                            <span className="text-red-500 font-black">8,000/=</span>
+                                        </div>
+                                    </div>
+
+                                    <div className="bg-black/40 p-4 rounded-xl sm:rounded-2xl border border-white/5 text-center text-[8px] sm:text-[9px] uppercase font-bold text-zinc-300 leading-relaxed">
+                                        1XBET | MELBET | 888STARZ | WOW BET | COLD BET
+                                    </div>
+
+                                    <div className="text-center space-y-4 pt-2 pb-2">
+                                        <a href="https://wa.me/94716344483" target="_blank" className="w-full bg-green-600 hover:bg-green-500 py-3.5 sm:py-4 rounded-xl sm:rounded-2xl font-black uppercase text-[11px] sm:text-xs tracking-[0.2em] transition-all flex items-center justify-center gap-3 shadow-lg shadow-green-900/20">
+                                            <Icon name="message-circle" className="w-4 h-4" /> DM To Buy Now
+                                        </a>
+                                        <p className="text-zinc-600 text-[8px] font-bold tracking-widest">+94 71 634 4483</p>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    )}
+
+                    <div className="fixed bottom-4 sm:bottom-8 left-0 w-full text-center px-4">
+                        <p className="text-[7px] sm:text-[8px] font-black text-zinc-800 uppercase tracking-[0.3em] sm:tracking-[0.5em] leading-relaxed">Subnet Mafia Cyber Division • Unauthorized Access is Prohibited</p>
+                    </div>
+                </div>
+            );
+        };
+
+        const root = ReactDOM.createRoot(document.getElementById('root'));
+        root.render(<App />);
+    </script>
+</body>
+</html>
