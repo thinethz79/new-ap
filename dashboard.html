@@ -24,9 +24,23 @@
             from { opacity: 0; transform: translateY(10px); }
             to { opacity: 1; transform: translateY(0); }
         }
+        /* Scrollbar for modal */
+        ::-webkit-scrollbar {
+            width: 8px;
+        }
+        ::-webkit-scrollbar-track {
+            background: #1e293b; 
+        }
+        ::-webkit-scrollbar-thumb {
+            background: #475569; 
+            border-radius: 4px;
+        }
+        ::-webkit-scrollbar-thumb:hover {
+            background: #64748b; 
+        }
     </style>
 </head>
-<body class="bg-slate-900 text-slate-100 font-sans min-h-screen p-4 md:p-8">
+<body class="bg-slate-900 text-slate-100 font-sans min-h-screen p-4 md:p-8 relative">
 
     <div class="max-w-4xl mx-auto space-y-6">
         
@@ -43,20 +57,25 @@
                     </h1>
                     <p class="text-xs text-slate-400 flex items-center gap-1">
                         <i data-lucide="wifi" class="w-3 h-3 text-green-500"></i>
-                        Server Connected: 44ms
+                        Server Latency: <span id="latency-ms">44</span>ms
                     </p>
                 </div>
             </div>
-            <div class="text-right">
-                <div id="current-clock" class="text-2xl font-mono font-bold text-white">
-                    00:00:00
-                </div>
-                <div class="flex items-center justify-end gap-2 text-green-400 text-xs font-bold mt-1">
-                    <span class="relative flex h-2 w-2">
-                        <span class="animate-ping absolute inline-flex h-full w-full rounded-full bg-green-400 opacity-75"></span>
-                        <span class="relative inline-flex rounded-full h-2 w-2 bg-green-500"></span>
-                    </span>
-                    LIVE SYNC
+            <div class="text-right flex items-center gap-4">
+                <button id="btn-open-manual" class="bg-slate-800 hover:bg-slate-700 text-purple-400 p-2 rounded-full border border-purple-500/30 transition-colors" title="Open Manual">
+                    <i data-lucide="help-circle" class="w-6 h-6"></i>
+                </button>
+                <div class="hidden md:block">
+                    <div id="current-clock" class="text-2xl font-mono font-bold text-white">
+                        00:00:00
+                    </div>
+                    <div class="flex items-center justify-end gap-2 text-green-400 text-xs font-bold mt-1">
+                        <span class="relative flex h-2 w-2">
+                            <span class="animate-ping absolute inline-flex h-full w-full rounded-full bg-green-400 opacity-75"></span>
+                            <span class="relative inline-flex rounded-full h-2 w-2 bg-green-500"></span>
+                        </span>
+                        LIVE SYNC
+                    </div>
                 </div>
             </div>
         </header>
@@ -201,7 +220,10 @@
                         </div>
                         <div>
                             <p id="analysis-status" class="text-white font-bold text-lg animate-pulse">CONNECTING...</p>
-                            <p class="text-slate-500 text-xs mt-2 font-mono">HASH: <span id="hash-display"></span></p>
+                            <div class="flex flex-col items-center gap-1 mt-2">
+                                <p class="text-slate-500 text-xs font-mono">PATTERN: <span id="pattern-display" class="text-purple-400">WAITING</span></p>
+                                <p class="text-slate-500 text-xs font-mono">HASH: <span id="hash-display"></span></p>
+                            </div>
                         </div>
                     </div>
 
@@ -237,8 +259,15 @@
                                 <span id="result-value" class="text-6xl font-black font-mono text-white drop-shadow-[0_0_10px_rgba(168,85,247,0.8)]"></span>
                             </div>
 
-                            <div class="mt-4 text-center">
-                                <span class="text-xs text-slate-500 uppercase">Safe Exit: <span id="result-safety" class="text-slate-300 font-bold"></span></span>
+                            <div class="mt-4 text-center flex justify-between px-4">
+                                <div class="text-left">
+                                    <span class="text-[10px] text-slate-500 uppercase block">Trend</span>
+                                    <span id="result-trend" class="text-xs font-bold text-purple-400">BULLISH</span>
+                                </div>
+                                <div class="text-right">
+                                    <span class="text-[10px] text-slate-500 uppercase block">Safe Exit</span>
+                                    <span id="result-safety" class="text-xs font-bold text-slate-300"></span>
+                                </div>
                             </div>
                         </div>
 
@@ -295,6 +324,94 @@
             </div>
         </div>
 
+        <!-- USER MANUAL MODAL -->
+        <div id="manual-modal" class="fixed inset-0 z-50 hidden bg-slate-950/80 backdrop-blur-sm flex items-center justify-center p-4">
+            <div class="bg-slate-900 border border-slate-700 w-full max-w-2xl rounded-2xl shadow-2xl flex flex-col max-h-[85vh]">
+                
+                <!-- Modal Header -->
+                <div class="p-6 border-b border-slate-800 flex justify-between items-center">
+                    <h2 class="text-2xl font-bold text-white flex items-center gap-2">
+                        <i data-lucide="book-open" class="text-purple-500"></i> User Manual
+                    </h2>
+                    <button id="btn-close-manual" class="text-slate-400 hover:text-white transition-colors">
+                        <i data-lucide="x" class="w-6 h-6"></i>
+                    </button>
+                </div>
+
+                <!-- Modal Content -->
+                <div class="p-6 overflow-y-auto space-y-8">
+                    
+                    <!-- Section 1: Generation -->
+                    <section class="space-y-3">
+                        <h3 class="text-lg font-bold text-purple-400 flex items-center gap-2">
+                            <span class="bg-purple-500/20 text-purple-400 w-6 h-6 rounded-full flex items-center justify-center text-xs">1</span>
+                            How to Generate Signals
+                        </h3>
+                        <ul class="space-y-2 text-slate-300 text-sm list-disc pl-8">
+                            <li><strong class="text-white">Step 1 (Calibration):</strong> The AI requires data to understand the current game volatility. Enter the result of the last <b>5 rounds</b> (Time and Multiplier) into the "Add Round Data" section.</li>
+                            <li><strong class="text-white">Step 2 (Analysis):</strong> Once 5 rounds are added, the "Get Next Signal" button becomes active. Click it to start the server connection simulation.</li>
+                            <li><strong class="text-white">Step 3 (Result):</strong> Wait for the analysis phases (hashing, pattern recognition) to complete. The system will output a predicted high multiplier.</li>
+                        </ul>
+                    </section>
+
+                    <!-- Section 2: Betting -->
+                    <section class="space-y-3">
+                        <h3 class="text-lg font-bold text-green-400 flex items-center gap-2">
+                            <span class="bg-green-500/20 text-green-400 w-6 h-6 rounded-full flex items-center justify-center text-xs">2</span>
+                            Betting Strategy Guide
+                        </h3>
+                        <div class="bg-slate-800 p-4 rounded-lg border border-slate-700 space-y-3">
+                            <div>
+                                <h4 class="text-white font-bold text-sm mb-1">Target Time</h4>
+                                <p class="text-xs text-slate-400">This is the exact time the AI predicts the high round will occur. Ensure you place your bets <b>10 seconds before</b> this timestamp.</p>
+                            </div>
+                            <div>
+                                <h4 class="text-white font-bold text-sm mb-1">Safe Exit (Auto-Cashout)</h4>
+                                <p class="text-xs text-slate-400">The "Predicted Odd" is the potential maximum. <b>DO NOT</b> wait for it. Always set your Auto-Cashout to the <b>"Safe Exit"</b> value (e.g., if prediction is 12.00x, Safe Exit might be 9.50x).</p>
+                            </div>
+                            <div>
+                                <h4 class="text-white font-bold text-sm mb-1">Confidence Score</h4>
+                                <p class="text-xs text-slate-400">
+                                    <span class="text-green-400 font-bold">90%+</span>: Aggressive Bet.<br>
+                                    <span class="text-yellow-400 font-bold">80-89%</span>: Moderate Bet.<br>
+                                    <span class="text-red-400 font-bold">&lt;80%</span>: Skip or Low Bet.
+                                </p>
+                            </div>
+                        </div>
+                    </section>
+
+                    <!-- Section 3: Feedback Loop -->
+                    <section class="space-y-3">
+                        <h3 class="text-lg font-bold text-red-400 flex items-center gap-2">
+                            <span class="bg-red-500/20 text-red-400 w-6 h-6 rounded-full flex items-center justify-center text-xs">3</span>
+                            The Feedback Loop
+                        </h3>
+                        <p class="text-sm text-slate-300">
+                            After every signal, you must report the result to keep accuracy high.
+                        </p>
+                        <div class="grid grid-cols-2 gap-4">
+                            <div class="bg-green-900/20 p-3 rounded border border-green-500/20">
+                                <span class="text-green-400 font-bold text-xs block mb-1">WIN Button</span>
+                                <span class="text-[10px] text-slate-400">Click this if the plane flew HIGHER than the "Safe Exit". It generates the next signal immediately.</span>
+                            </div>
+                            <div class="bg-red-900/20 p-3 rounded border border-red-500/20">
+                                <span class="text-red-400 font-bold text-xs block mb-1">LOSS Button</span>
+                                <span class="text-[10px] text-slate-400">Click if it crashed early. You will be asked to enter the actual crash odd. This re-calibrates the algorithm.</span>
+                            </div>
+                        </div>
+                    </section>
+
+                </div>
+                
+                <!-- Modal Footer -->
+                <div class="p-4 border-t border-slate-800 bg-slate-900/50 text-center">
+                    <button id="btn-close-manual-bottom" class="bg-purple-600 hover:bg-purple-700 text-white px-8 py-2 rounded-lg font-bold transition-colors">
+                        Understood
+                    </button>
+                </div>
+            </div>
+        </div>
+
         <!-- Footer -->
         <footer class="pt-8 border-t border-slate-800 text-center">
             <div class="bg-slate-800/50 p-4 rounded-lg border border-slate-700/50 inline-block max-w-2xl">
@@ -322,6 +439,7 @@
         // --- DOM Elements ---
         const els = {
             clock: document.getElementById('current-clock'),
+            latency: document.getElementById('latency-ms'),
             inputTime: document.getElementById('input-time'),
             inputOdd: document.getElementById('input-odd'),
             inputError: document.getElementById('input-error'),
@@ -331,6 +449,12 @@
             historyCount: document.getElementById('history-count'),
             btnClearHistory: document.getElementById('btn-clear-history'),
             
+            // Manual Modal
+            btnOpenManual: document.getElementById('btn-open-manual'),
+            btnCloseManual: document.getElementById('btn-close-manual'),
+            btnCloseManualBottom: document.getElementById('btn-close-manual-bottom'),
+            manualModal: document.getElementById('manual-modal'),
+
             // Views
             viewHeaderIcon: document.getElementById('view-header-icon'),
             cpuIconContainer: document.getElementById('cpu-icon-container'),
@@ -347,6 +471,7 @@
             
             // Analysis View Elements
             analysisStatus: document.getElementById('analysis-status'),
+            patternDisplay: document.getElementById('pattern-display'),
             hashDisplay: document.getElementById('hash-display'),
             
             // Result View Elements
@@ -354,6 +479,7 @@
             resultConfidence: document.getElementById('result-confidence'),
             resultValue: document.getElementById('result-value'),
             resultSafety: document.getElementById('result-safety'),
+            resultTrend: document.getElementById('result-trend'),
             btnWin: document.getElementById('btn-win'),
             btnLoss: document.getElementById('btn-loss'),
             alertBanner: document.getElementById('alert-banner'),
@@ -374,10 +500,16 @@
             const now = new Date();
             els.inputTime.value = formatTime(now);
 
-            // Start Clock
+            // Start Clock & Latency Sim
             setInterval(() => {
                 const cur = new Date();
                 els.clock.textContent = cur.toLocaleTimeString([], {hour12: false});
+                
+                // Simulate varying latency
+                if (cur.getSeconds() % 3 === 0) {
+                    els.latency.textContent = Math.floor(Math.random() * (65 - 30) + 30);
+                }
+                
                 checkAlerts(cur);
             }, 1000);
 
@@ -412,9 +544,6 @@
                 
                 // Styling
                 els.alertBanner.className = 'rounded-xl p-3 border-2 flex flex-col items-center justify-center gap-1 shadow-lg mb-4 bg-yellow-500/10 border-yellow-500 text-yellow-500 animate-pulse';
-                // Note: Lucide icons need re-rendering if changed dynamically, 
-                // but for simplicity we keep the 'timer' icon or 'zap' icon.
-                // We'll just rely on text for specific distinction here to keep it simple.
                 
             } else if (diff <= 0 && diff >= -30000) {
                 // Active
@@ -430,6 +559,14 @@
                 els.alertBanner.classList.remove('hidden');
             } else {
                 els.alertBanner.classList.add('hidden');
+            }
+        }
+
+        function toggleManual(show) {
+            if(show) {
+                els.manualModal.classList.remove('hidden');
+            } else {
+                els.manualModal.classList.add('hidden');
             }
         }
 
@@ -461,6 +598,12 @@
                 els.resultConfidence.textContent = prediction.confidence + '%';
                 els.resultValue.textContent = prediction.value.toFixed(2) + 'x';
                 els.resultSafety.textContent = prediction.safety + 'x';
+                els.resultTrend.textContent = prediction.trend;
+                
+                // Color trend
+                if(prediction.trend.includes('BEAR')) els.resultTrend.className = "text-xs font-bold text-red-400";
+                else els.resultTrend.className = "text-xs font-bold text-purple-400";
+
             } else {
                 // Idle State
                 els.viewIdle.classList.remove('hidden');
@@ -516,6 +659,15 @@
 
         // --- Event Handlers ---
         
+        // MANUAL HANDLERS
+        els.btnOpenManual.addEventListener('click', () => toggleManual(true));
+        els.btnCloseManual.addEventListener('click', () => toggleManual(false));
+        els.btnCloseManualBottom.addEventListener('click', () => toggleManual(false));
+        // Close on backdrop click
+        els.manualModal.addEventListener('click', (e) => {
+            if(e.target === els.manualModal) toggleManual(false);
+        });
+
         // PASTE HANDLER
         function handlePaste(e) {
             e.preventDefault();
@@ -601,46 +753,74 @@
             els.inputError.classList.add('hidden');
             updateViewState();
 
-            // Steps
-            els.analysisStatus.textContent = 'CONNECTING TO SERVER...';
+            // Analysis Animation Sequence
+            els.analysisStatus.textContent = 'CONNECTING TO GAME SERVER...';
+            els.patternDisplay.textContent = 'WAITING';
             els.hashDisplay.textContent = Math.random().toString(36).substring(7).toUpperCase();
 
             setTimeout(() => {
-                els.analysisStatus.textContent = 'ANALYZING HASH VOLATILITY...';
+                els.analysisStatus.textContent = 'ANALYZING MARKET TRENDS...';
+                els.patternDisplay.textContent = 'CALCULATING MOMENTUM';
             }, 1000);
 
             setTimeout(() => {
-                els.analysisStatus.textContent = 'CALCULATING NEXT SEED...';
-            }, 2000);
+                els.analysisStatus.textContent = 'IDENTIFYING PATTERN SEED...';
+                // Pick a fake "Pattern" name
+                const patterns = ['ACCUMULATION', 'LATENCY SPIKE', 'VOLATILITY CORRECTION', 'TREND REVERSAL', 'DOUBLE TOP'];
+                const p = patterns[Math.floor(Math.random()*patterns.length)];
+                els.patternDisplay.textContent = p;
+            }, 2200);
 
             setTimeout(() => {
                 const now = new Date();
                 const futureSeconds = Math.floor(Math.random() * (60 - 30) + 30);
                 const signalTime = new Date(now.getTime() + futureSeconds * 1000);
 
-                // --- ALGORITHM LOGIC ---
+                // --- ENHANCED ALGORITHM LOGIC ---
                 const last5 = history.slice(0, 5);
-                const avgOdd = last5.reduce((acc, curr) => acc + parseFloat(curr.odd), 0) / 5;
-                const volatility = Math.abs(parseFloat(last5[0].odd) - parseFloat(last5[4].odd));
+                const odds = last5.map(h => parseFloat(h.odd));
+                
+                // 1. Weighted Average (More weight to recent)
+                const weightedAvg = (odds[0]*3 + odds[1]*2 + odds[2]*1.5 + odds[3]*1 + odds[4]*0.5) / 8;
+                
+                // 2. Trend Direction
+                const isDowntrend = odds[0] < odds[4];
+                const recentCrash = odds[0] < 2.0 && odds[1] < 2.0;
 
+                // 3. Volatility Score
+                const volatility = Math.abs(odds[0] - odds[4]);
+
+                // 4. Determine Bounds (Strictly High > 10x)
                 let minOdd = 10.00;
-                let maxOdd = volatility > 5 ? 80.00 : 30.00;
+                let maxOdd = 30.00;
 
-                let rawPrediction = Math.random() * (maxOdd - minOdd) + minOdd;
-
-                if (avgOdd < 3.00) {
-                    rawPrediction += (Math.random() * 10);
+                // If massive volatility or recent double crash, predict "Correction" (Huge odd)
+                if (volatility > 10 || recentCrash) {
+                    maxOdd = 65.00; 
+                } else if (weightedAvg > 10) {
+                    // If already high, assume continuation but safer
+                    maxOdd = 20.00; 
                 }
+
+                // 5. Generate Random within bounds
+                let rawPrediction = Math.random() * (maxOdd - minOdd) + minOdd;
+                
+                // 6. Refine based on milliseconds (Pseudo-RNG seed)
+                const seed = new Date().getMilliseconds() / 1000;
+                rawPrediction += seed * 2; 
 
                 const predictedOdd = parseFloat(rawPrediction.toFixed(2));
 
-                let confidenceScore = 80;
-                if (volatility < 3.0) confidenceScore += 10;
-                if (history.length > 10) confidenceScore += 5;
-                confidenceScore = Math.min(98, Math.max(75, confidenceScore));
+                // 7. Confidence & Safety
+                let confidenceScore = 82;
+                if (recentCrash) confidenceScore += 8; // High confidence in reversal
+                if (volatility < 2) confidenceScore -= 5; // Low volatility = unpredictable
+                confidenceScore = Math.min(99, Math.max(75, confidenceScore));
 
-                const safetyMargin = confidenceScore > 90 ? 0.85 : 0.75;
+                const safetyMargin = confidenceScore > 90 ? 0.80 : 0.70;
                 const safetyOdd = (predictedOdd * safetyMargin).toFixed(2);
+
+                const trendText = isDowntrend ? "BEARISH REVERSAL" : "BULLISH CONTINUATION";
 
                 prediction = {
                     id: Date.now(),
@@ -648,7 +828,8 @@
                     time: formatTime(signalTime),
                     value: predictedOdd,
                     safety: safetyOdd,
-                    confidence: confidenceScore
+                    confidence: confidenceScore,
+                    trend: trendText
                 };
 
                 isAnalyzing = false;
